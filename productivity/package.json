@@ -1,0 +1,7 @@
+{
+  "name": "@addon/productivity",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "The Productivity addon: the left menu tab of the days of a container."
+}

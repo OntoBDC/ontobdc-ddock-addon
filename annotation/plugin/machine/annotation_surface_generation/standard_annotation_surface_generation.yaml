@@ -1,0 +1,24 @@
+statechart:
+  name: AnnotationSurfaceGeneration
+  description: "Draw the document an annotation is made on as one image, which is the surface it is marked on."
+  root state:
+    name: annotation_surface_generation
+    initial: undefined
+    states:
+      - name: undefined
+        transitions:
+          - target: surface_document_read
+            guard: handler.can_transit_to(to_state = AnnotationSurfaceGenerationStatePort.SURFACE_DOCUMENT_READ)
+            action: handler.perform_state_transition(to_state = AnnotationSurfaceGenerationStatePort.SURFACE_DOCUMENT_READ)
+      - name: surface_document_read
+        transitions:
+          - target: surface_renderer_found
+            guard: handler.can_transit_to(to_state = AnnotationSurfaceGenerationStatePort.SURFACE_RENDERER_FOUND)
+            action: handler.perform_state_transition(to_state = AnnotationSurfaceGenerationStatePort.SURFACE_RENDERER_FOUND)
+      - name: surface_renderer_found
+        transitions:
+          - target: surface_image_rendered
+            guard: handler.can_transit_to(to_state = AnnotationSurfaceGenerationStatePort.SURFACE_IMAGE_RENDERED)
+            action: handler.perform_state_transition(to_state = AnnotationSurfaceGenerationStatePort.SURFACE_IMAGE_RENDERED)
+      - name: surface_image_rendered
+        type: final

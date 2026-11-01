@@ -1,0 +1,10 @@
+{
+  "name": "@addon/annotation",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "The Annotations addon: the left menu tab of the annotations of a container.",
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  }
+}

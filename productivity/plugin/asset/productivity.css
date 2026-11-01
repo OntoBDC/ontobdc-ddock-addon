@@ -1,0 +1,5 @@
+/* The check of a group of the Productivity panel: green hides the completed items. */
+.productivity-filter { flex: 0 0 auto; display: inline-flex; align-items: center; margin-left: auto; padding: 1px 4px; border: 0; border-radius: 3px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.productivity-filter[data-active="true"] { color: var(--text-success); }
+.productivity-filter:hover, .productivity-filter:focus-visible { background: var(--surface-hover); outline: none; }
+.productivity-filter + .annotations-sort { margin-left: 2px; }
