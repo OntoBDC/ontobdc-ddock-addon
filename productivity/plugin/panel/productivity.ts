@@ -1,11 +1,12 @@
 import { NEW_ICON } from '@/ontobdc/shared/adapter/menu-icons';
-import { GOAL_ENTITY_TYPE, GOAL_TREE_COMMAND, MILESTONE_LIST_COMMAND, TASK_LIST_COMMAND, MILESTONE_ENTITY_TYPE, TASK_ENTITY_TYPE } from '@/addon/productivity/adapter/productivity-format';
+import { GOAL_ENTITY_TYPE, GOAL_TREE_COMMAND, MILESTONE_LIST_COMMAND, TASK_LIST_COMMAND, MILESTONE_ENTITY_TYPE, TASK_ENTITY_TYPE, WORKSTREAM_ENTITY_TYPE } from '@/addon/productivity/adapter/productivity-format';
 import { renderTreeView } from '@/addon/productivity/plugin/panel/tree-view';
 import { withEntitiesRead } from '@/ontobdc/shared/adapter/entity-groups';
 import { createHistoryView } from '@/ontobdc/shared/adapter/history-view';
 import { listSkeleton, watchCommand } from '@/ontobdc/shared/adapter/command-pending';
 import { CONTAINER_ENTITY_COMMAND } from '@/ontobdc/shared/domain/model/container-command';
 import { eventBus } from '@/ontobdc/shared/adapter/event-bus';
+import { nameIn } from '@/ontobdc/shared/adapter/facade-labels';
 import { createMoreMenu } from '@/ontobdc/shared/adapter/more-menu';
 import { ContainerRepository } from '@/ontobdc/shared/adapter/container-repository';
 import type { Mountable } from '@/ontobdc/shared/adapter/view';
@@ -24,6 +25,8 @@ type Group = {
   completable: boolean;
   /** Whether the group is a tree: its items are the entities of the type and what the facades say is below them. */
   tree: boolean;
+  /** Whether the group lists work streams: each with the properties of its framework that point to entities, and those entities. */
+  aspects?: boolean;
 };
 
 /** The groups of the panel, in the order they are shown. */
@@ -31,6 +34,7 @@ const GROUPS: readonly Group[] = [
   { id: 'tasks', label: 'productivity.group.tasks', entityType: TASK_ENTITY_TYPE, completable: true, tree: false },
   { id: 'goals', label: 'productivity.group.goals', entityType: GOAL_ENTITY_TYPE, completable: false, tree: true },
   { id: 'milestones', label: 'productivity.group.milestones', entityType: MILESTONE_ENTITY_TYPE, completable: false, tree: false },
+  { id: 'workstreams', label: 'productivity.group.workstreams', entityType: WORKSTREAM_ENTITY_TYPE, completable: false, tree: false, aspects: true },
 ];
 
 /** The group of the history, after the groups of entities. */
@@ -48,7 +52,8 @@ const isCompleted = (item: EntityItem): boolean => {
 
 /**
  * The Productivity panel. Its groups are tasks, goals and milestones, each an
- * accordion section; only one is open at a time. What a group lists is the
+ * accordion section; only one is open at a time. The work streams are a tree of three levels: the work stream, the
+ * properties of the framework it uses whose values are entities, and those entities. What a group lists is the
  * entities of the dataset of the container that holds its entity type, as
  * `presentation.container.entities.found` gives the datasets; a group that is a
  * tree (the goals) shows instead the entities of the type with what the facades
@@ -100,6 +105,34 @@ export default function makeProductivity(): Mountable {
 
   const writable = (): boolean => ContainerRepository.getInstance().get()?.access === 'readwrite';
   const datasetOf = (group: Group): EntityGroup | undefined => datasets.find((dataset) => dataset.entityTypes.includes(group.entityType));
+
+  /** The entity with the global id, and the dataset that keeps it, among the datasets of the container. */
+  const locate = (id: string): { dataset: EntityGroup; item: EntityItem } | undefined => {
+    for (const dataset of datasets) {
+      const item = dataset.items.find((candidate) => candidate.id === id);
+      if (item) return { dataset, item };
+    }
+    return undefined;
+  };
+
+  /**
+   * The work streams as a tree: each one, then the properties of the framework it uses whose values are entities
+   * (the fields of the framework that point to entities), then the entities that are the value of each. A work
+   * stream that uses no framework, or one that is not in the container, has nothing below it.
+   */
+  const workStreamNodes = (group: Group): EntityTreeNode[] => shownItems(group).map((workStream) => {
+    const frameworkId = workStream.fields.find((field) => field.name === 'framework')?.values[0] ?? '';
+    const framework = frameworkId ? locate(frameworkId) : undefined;
+    const properties = (framework?.item.fields ?? []).filter((field) => field.referencesEntities === true).map((field): EntityTreeNode => {
+      const entities = (field.values[0] ?? '').split('|').map((id) => id.trim()).filter(Boolean).map((id): EntityTreeNode => {
+        const found = locate(id);
+        return { iri: null, id, name: found ? titleOf(found.item) : id, type: found?.item.type ?? '', dataset: found?.dataset.id ?? '', children: [] };
+      });
+      const name = nameIn(field.labels, getLocale()) ?? field.name;
+      return { iri: null, id: `${workStream.id}\u0000${field.name}`, name: `${name} (${entities.length})`, type: 'property', dataset: '', children: entities };
+    });
+    return { iri: null, id: workStream.id, name: titleOf(workStream), type: workStream.type, dataset: datasetOf(group)?.id ?? '', children: properties };
+  });
 
   /** The items the group shows: all of them, or only the not completed while its check is green; sorted when asked. */
   const shownItems = (group: Group): EntityItem[] => {
@@ -304,6 +337,17 @@ export default function makeProductivity(): Mountable {
           onSelect: (place) => { selectedPlace = place; },
           onToggle: (place, open) => { if (open) expanded.add(place); else expanded.delete(place); },
           onOpen: (node) => eventBus.publish('presentation.database.item.opened', SOURCE, { group: node.dataset, id: node.id }),
+        }));
+      } else if (group.aspects) {
+        // The work streams, each with the properties of its framework and their entities; a property is not opened.
+        body.appendChild(renderTreeView(workStreamNodes(group), {
+          expanded,
+          selected: selectedPlace,
+          order: sortOrder.get(group.id),
+          locale: getLocale(),
+          onSelect: (place) => { selectedPlace = place; },
+          onToggle: (place, open) => { if (open) expanded.add(place); else expanded.delete(place); },
+          onOpen: (node) => { if (node.dataset) eventBus.publish('presentation.database.item.opened', SOURCE, { group: node.dataset, id: node.id }); },
         }));
       } else if (dataset && shown.length > 0) {
         const list = document.createElement('ul');

@@ -97,6 +97,7 @@ function itemsOf(annotations: unknown): AnnotationItem[] {
       createdAt: textOf(annotation.created_at),
       completedAt: textOf(annotation.completed_at),
       sourceDocument: textOf(annotation.source_document),
+      entity: textOf(annotation.entity),
       related: Array.isArray(annotation.related_documents)
         ? annotation.related_documents.filter((path): path is string => typeof path === 'string' && path !== '').map(unwrapCliText)
         : [],

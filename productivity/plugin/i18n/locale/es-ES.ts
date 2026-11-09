@@ -7,6 +7,7 @@ export default {
   'productivity.group.tasks': 'Tareas',
   'productivity.group.goals': 'Objetivos',
   'productivity.group.milestones': 'Hitos',
+  'productivity.group.workstreams': 'Frentes de trabajo',
   'productivity.group.history': 'Historial',
   'productivity.filter.hideCompleted': 'Ocultar tareas completadas',
   'productivity.filter.showCompleted': 'Mostrar tareas completadas',

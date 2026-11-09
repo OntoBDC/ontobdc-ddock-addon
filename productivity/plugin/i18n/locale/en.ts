@@ -10,6 +10,7 @@ export const en = {
   'productivity.group.tasks': 'Tasks',
   'productivity.group.goals': 'Goals',
   'productivity.group.milestones': 'Milestones',
+  'productivity.group.workstreams': 'Work Streams',
   'productivity.group.history': 'History',
   'productivity.filter.hideCompleted': 'Hide completed tasks',
   'productivity.filter.showCompleted': 'Show completed tasks',

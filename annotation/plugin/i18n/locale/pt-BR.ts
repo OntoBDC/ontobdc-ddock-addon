@@ -11,6 +11,7 @@ export default {
   'nav.annotations': 'Anotações',
   'pane.annotations.header': 'ANOTAÇÕES',
   'annotations.empty': 'Nenhuma anotação ainda',
+  'annotations.target.none': 'Sem alvo',
   'annotations.failed': 'Não foi possível ler as anotações',
   'annotations.moreActions': 'Mais ações para {item}',
   'annotations.hasFiles': '{count} arquivos relacionados',

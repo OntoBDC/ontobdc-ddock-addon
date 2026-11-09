@@ -14,6 +14,7 @@ export const en = {
   'nav.annotations': 'Annotations',
   'pane.annotations.header': 'ANNOTATIONS',
   'annotations.empty': 'No annotations yet',
+  'annotations.target.none': 'No target',
   'annotations.failed': 'Annotations could not be read',
   'annotations.moreActions': 'More actions for {item}',
   'annotations.hasFiles': '{count} related files',

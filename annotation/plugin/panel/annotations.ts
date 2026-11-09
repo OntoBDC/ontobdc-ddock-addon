@@ -6,11 +6,15 @@ import { documentImageRenderer } from '@/ontobdc/shared/adapter/document-image';
 import { DELETE_ICON, DRAW_ICON, EXPORT_ICON, NEW_ICON, OPEN_ICON } from '@/ontobdc/shared/adapter/menu-icons';
 import { createMoreMenu } from '@/ontobdc/shared/adapter/more-menu';
 import { ContainerRepository } from '@/ontobdc/shared/adapter/container-repository';
+import { EntityRepository } from '@/ontobdc/shared/adapter/entity-repository';
 import type { Mountable } from '@/ontobdc/shared/adapter/view';
 import type { AnnotationGroup, AnnotationItem } from '@/addon/annotation/domain/model/annotation';
 import { applyTranslations, getLocale, onLocaleChange, translate } from '@/ontobdc/shared/plugin/i18n';
 
 const SOURCE = 'annotations';
+
+/** The annotation type whose annotations the panel groups by the entity they point to: it is the only one that has it. */
+const CLASSIFICATION = 'classification';
 
 /** Excel, in outline: a sheet with its X. */
 const EXCEL_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5"/></svg>';
@@ -99,7 +103,7 @@ export default function makeAnnotations(): Mountable {
     eventBus.publish('presentation.annotations.item.opened', SOURCE, { group: group.id, id: annotation.id, title: annotation.title });
   };
 
-  const renderAnnotation = (group: AnnotationGroup, annotation: AnnotationItem): HTMLLIElement => {
+  const renderAnnotation = (group: AnnotationGroup, annotation: AnnotationItem, depth = 0): HTMLLIElement => {
     const hasRelated = annotation.related.length > 0;
     const li = document.createElement('li');
     li.className = 'tree-node file annotation';
@@ -108,7 +112,7 @@ export default function makeAnnotations(): Mountable {
 
     const row = document.createElement('div');
     row.className = 'tree-row';
-    row.style.setProperty('--depth', '0');
+    row.style.setProperty('--depth', String(depth));
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'tree-item';
@@ -171,6 +175,33 @@ export default function makeAnnotations(): Mountable {
     row.append(button, more);
     li.append(row);
     return li;
+  };
+
+  /**
+   * The annotations of a classification, under the entity each points to: the name of the entity and how many point
+   * to it, then its annotations. The ones that point to none come last.
+   */
+  const renderByTarget = (group: AnnotationGroup, items: AnnotationItem[]): HTMLLIElement[] => {
+    const byTarget = new Map<string, AnnotationItem[]>();
+    for (const annotation of items) byTarget.set(annotation.entity, [...(byTarget.get(annotation.entity) ?? []), annotation]);
+    const nameOf = (id: string): string => (id === '' ? translate('annotations.target.none') : EntityRepository.getInstance().find(id)?.item.name || id);
+    const targets = [...byTarget.keys()].sort((a, b) => (a === '' ? 1 : b === '' ? -1 : nameOf(a).localeCompare(nameOf(b), getLocale(), { numeric: true, sensitivity: 'base' })));
+    return targets.map((target) => {
+      const members = byTarget.get(target) ?? [];
+      const node = document.createElement('li');
+      node.className = 'tree-node dir annotation-target';
+      node.dataset.target = target;
+      node.setAttribute('role', 'group');
+      const head = document.createElement('div');
+      head.className = 'tree-row annotation-target-name';
+      head.style.setProperty('--depth', '0');
+      head.textContent = `${nameOf(target)} (${members.length})`;
+      const list = document.createElement('ul');
+      list.setAttribute('role', 'group');
+      list.append(...members.map((annotation) => renderAnnotation(group, annotation, 1)));
+      node.append(head, list);
+      return node;
+    });
   };
 
   /** The global ids of the annotations the group shows, which are the ones that can be exported. */
@@ -329,7 +360,7 @@ export default function makeAnnotations(): Mountable {
         const list = document.createElement('ul');
         list.className = 'tree annotations-list';
         list.setAttribute('role', 'tree');
-        list.append(...shown.map((annotation) => renderAnnotation(group, annotation)));
+        list.append(...(group.id === CLASSIFICATION ? renderByTarget(group, shown) : shown.map((annotation) => renderAnnotation(group, annotation))));
         body.appendChild(list);
       }
       section.appendChild(body);

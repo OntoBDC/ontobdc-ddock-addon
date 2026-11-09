@@ -3,6 +3,7 @@ const TYPE_BASE = 'http://datacenter.app.br/ontology/domain/productivity/taxonom
 export const TASK_ENTITY_TYPE = `${TYPE_BASE}Task`;
 export const GOAL_ENTITY_TYPE = `${TYPE_BASE}Goal`;
 export const MILESTONE_ENTITY_TYPE = `${TYPE_BASE}Milestone`;
+export const WORKSTREAM_ENTITY_TYPE = `${TYPE_BASE}WorkStream`;
 
 /** The ontobdc commands the productivity listeners chain: each lists the entities of one type of the container. */
 export const TASK_LIST_COMMAND = 'ontobdc container --entity task --list';

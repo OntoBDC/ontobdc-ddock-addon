@@ -3,3 +3,17 @@
 .productivity-filter[data-active="true"] { color: var(--text-success); }
 .productivity-filter:hover, .productivity-filter:focus-visible { background: var(--surface-hover); outline: none; }
 .productivity-filter + .annotations-sort { margin-left: 2px; }
+
+/* The aspects of the framework of a work stream (the 5W2H): one row for each, with its entities and its free text. */
+.framework-aspects { display: flex; flex-direction: column; gap: 8px; }
+.framework-aspects[data-saving="true"] { opacity: .6; }
+.framework-aspects-title { font-weight: 700; color: var(--text-strong); }
+.framework-aspect { display: grid; box-sizing: border-box; width: calc(100% + 40px); grid-template-columns: 80px minmax(0, 2fr) minmax(0, 1fr); align-items: start; gap: 8px; }
+.framework-aspect-label { align-self: center; color: var(--text-muted); }
+.framework-aspect-values { justify-content: flex-start; }
+.framework-aspect-values-aligned { padding-top: calc(1.5em + 4px); }
+.framework-aspect-texts { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.framework-aspect-text-label { color: var(--text-muted); line-height: 1.5; }
+.framework-aspect-textarea { box-sizing: border-box; width: 100%; min-height: 96px; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--surface); color: var(--text); font: inherit; resize: vertical; }
+.framework-aspect-textarea:focus-visible { outline: 1px solid var(--text-link); outline-offset: 0; }
+.framework-aspect-textarea:disabled { opacity: .6; }

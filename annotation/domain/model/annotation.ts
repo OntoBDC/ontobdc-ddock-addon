@@ -10,6 +10,8 @@ export type AnnotationItem = {
   completedAt: string;
   /** Path, in the container, of the document the annotation was made on; empty when none. */
   sourceDocument: string;
+  /** Global id of the entity the annotation says its geometry points to (a classification); empty when none. */
+  entity: string;
   /** Paths, in the container, of the files the annotation refers to. */
   related: string[];
 };
